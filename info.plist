@@ -21,7 +21,7 @@
 		</array>
 	</dict>
 	<key>createdby</key>
-	<string>Claude</string>
+	<string>Daniel Marino via Claude Code</string>
 	<key>description</key>
 	<string>Search and copy Tapestry design tokens</string>
 	<key>disabled</key>
@@ -125,7 +125,7 @@
 	<key>variablesdontexport</key>
 	<array/>
 	<key>version</key>
-	<string>1.0.0</string>
+	<string>1.1.1</string>
 	<key>webaddress</key>
 	<string>https://github.com/planningcenter/tapestry</string>
 </dict>
