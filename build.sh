@@ -6,7 +6,7 @@
 
 set -e
 
-WORKFLOW_NAME="tapestry-tokens.alfredworkflow"
+WORKFLOW_NAME="pco-tapestry-tokens-alfred.alfredworkflow"
 PLIST_FILE="info.plist"
 
 # Check if version bump argument is provided

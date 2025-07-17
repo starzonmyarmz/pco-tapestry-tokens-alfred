@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>bundleid</key>
-	<string>com.alfred.tapestry-tokens</string>
+	<string>com.alfred.pcoTapestryTokens</string>
 	<key>connections</key>
 	<dict>
 		<key>01234567-89AB-CDEF-0123-456789ABCDEF</key>
@@ -27,7 +27,7 @@
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
-	<string>Tapestry Tokens</string>
+	<string>PCO Tapestry Tokens</string>
 	<key>objects</key>
 	<array>
 		<dict>
@@ -100,7 +100,7 @@
 		</dict>
 	</array>
 	<key>readme</key>
-	<string>Search and copy Tapestry design tokens. Use "tokens &lt;search&gt;" to find tokens.</string>
+	<string>Search and copy Tapestry design tokens. Use "tt &lt;search&gt;" to find tokens.</string>
 	<key>uidata</key>
 	<dict>
 		<key>01234567-89AB-CDEF-0123-456789ABCDEF</key>
@@ -125,7 +125,7 @@
 	<key>variablesdontexport</key>
 	<array/>
 	<key>version</key>
-	<string>1.1.1</string>
+	<string>1.1.2</string>
 	<key>webaddress</key>
 	<string>https://github.com/planningcenter/tapestry</string>
 </dict>
