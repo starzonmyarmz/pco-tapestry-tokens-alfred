@@ -2,7 +2,7 @@
 
 Search and copy [Tapestry](https://planningcenter.github.io/tapestry/?path=/docs/foundations-design-tokens--docs) design tokens using `tt`.
 
-[Download the Alfred extension](https://github.com/starzonmyarmz/tapestry-tokens-alfred-extension/releases/download/1.1.2/pco-tapestry-tokens-alfred.alfredworkflow) and double-click to install.
+[Download the Alfred extension](https://github.com/starzonmyarmz/tapestry-tokens-alfred-extension/releases/download/latest/pco-tapestry-tokens-alfred.alfredworkflow) and double-click to install.
 
 ![Screenshot](screenshot.png)
 
