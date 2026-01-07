@@ -1,11 +1,6 @@
 # Claude AI files
 .claude
 
-# Temporary cache files
-.last_update_check
-.commit_hash
-*.bak
-
 # Python cache
 __pycache__/
 *.pyc
