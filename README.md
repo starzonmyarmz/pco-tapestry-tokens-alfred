@@ -6,8 +6,6 @@ Search and copy [Tapestry](https://planningcenter.github.io/tapestry/?path=/docs
 
 ![Screenshot](screenshot.png)
 
-The tokens are cached for 1 hour, but you can force an update using `tt update`.
-
 ---
 
 ## About development
