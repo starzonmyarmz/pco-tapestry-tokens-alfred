@@ -1,5 +1,6 @@
 # Claude AI files
 .claude
+CLAUDE.local.md
 
 # Python cache
 __pycache__/

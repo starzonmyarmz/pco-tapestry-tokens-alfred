@@ -2,6 +2,8 @@
 
 This Alfred workflow was developed using [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview).
 
+**IMPORTANT**: Always check `CLAUDE.local.md` for personal/local environment settings before starting work.
+
 ## Development History
 
 ### Version 1.x (Initial Development)
@@ -26,47 +28,99 @@ This Alfred workflow was developed using [Claude Code](https://docs.anthropic.co
 - Simplified token naming (removed redundant -default/-primary suffixes)
 - Regenerated all 352 color token PNG icons with updated values
 - Added `generate_icon_script.py` for reproducible icon generation
-- Total: 464 tokens (352 colors, 112 non-colors)
+
+### Version 2.1.0 (Version Bump)
+- Version bump from 2.0.1 to 2.1.0
+- Rebuilt workflow package
+- **Current token count**: 403 total (352 colors, 51 non-colors)
+
+## Features
+
+### Search & Copy
+- **Fuzzy search**: Type partial token names (e.g., "bord dark" finds `--t-border-color-dark`)
+- **Instant results**: Returns top 20 matches, sorted by relevance
+- **Quick copy**: Press Enter to copy token name to clipboard
+- **Visual icons**: Color tokens show actual color previews (64x64 PNG icons)
+
+### Search Algorithm
+The fuzzy matching system uses three strategies (in priority order):
+1. **Exact substring matching** - Highest priority for direct matches
+2. **Character sequence matching** - Finds tokens where query chars appear in order
+3. **Similarity ratio** - Uses `difflib.SequenceMatcher` with 0.2 threshold for flexible matching
+
+### Token Support
+- **Color tokens**: HSL/HSLA colors with visual icon previews
+- **Gradient tokens**: Linear gradients rendered as icon images
+- **Non-color tokens**: Spacing, sizing, border-radius, etc. with mono Tapestry icon
 
 ## Architecture
 
 ### Core Components
 
-**search_tokens.py**
-- Main search logic using fuzzy matching with `difflib.SequenceMatcher`
-- Token loading from local `tokens.json` file
-- Alfred JSON output formatting
-- Icon configuration for color tokens
+**search_tokens.py** (115 lines)
+- Main entry point for Alfred Script Filter
+- Fuzzy search using three-tier matching strategy:
+  - Exact substring matching (position-scored)
+  - Character sequence matching (flexible)
+  - Similarity ratio matching (`difflib.SequenceMatcher`, threshold: 0.2)
+- Token loading from local `tokens.json` (no caching)
+- Alfred JSON output formatting with icon configuration
+- Detects color tokens by HSL/HSLA prefix
+- Returns top 20 results, sorted by relevance
 
-**tokens.json**
-- Flat JSON structure containing Tapestry design tokens
+**tokens.json** (403 tokens, ~25KB)
+- Flat JSON structure: `{"--token-name": "value"}`
 - Keys: CSS custom property names (e.g., `--t-border-radius-sm`)
-- Values: CSS values (e.g., `"2px"`, `"hsl(0, 0%, 24%)"`)
-- Source: Parsed from Tapestry's `tokens-alias.css` file
+- Values: CSS values (e.g., `"2px"`, `"hsl(0, 0%, 24%)"`, `"linear-gradient(...)"`)
+- Source: Manually parsed from Tapestry's `tokens-alias.css`
+- Excludes `var()` references (only concrete values included)
 
-**generate_icon_script.py**
-- Python script using Pillow (PIL) to generate color token icons
-- Parses HSL/HSLA color values and creates 64x64 PNG images
-- Handles both solid colors and linear gradients
-- Generates 352 icons for all color tokens
+**generate_icon_script.py** (120 lines)
+- Standalone Python script using Pillow (PIL)
+- Parses HSL/HSLA color strings to RGBA via custom HSL→RGB conversion
+- Generates 64x64 PNG icons for all color tokens (352 icons)
+- Supports solid colors and linear gradients
+- Gradient rendering: Horizontal interpolation between color stops
+- Creates `images/*.png` files with sanitized token names
 
-**build.sh**
-- Automated versioning (major/minor/patch)
-- Creates `.alfredworkflow` package
-- Excludes development files via `.gitignore` patterns
+**build.sh** (89 lines)
+- Automated semantic versioning (major/minor/patch via CLI argument)
+- Reads current version from `info.plist`, bumps, and updates
+- Creates `.alfredworkflow` ZIP package
+- Excludes development files: `.git`, `.claude`, `build.sh`, `*.pyc`, etc.
+- Validates version bump argument before proceeding
+
+**info.plist** (Alfred workflow configuration)
+- Workflow metadata: name, bundle ID, description
+- Script Filter configuration: keyword `tt`, runs `search_tokens.py`
+- Output action: Copy to clipboard (no auto-paste)
+- Current version: 2.1.0
 
 ### Design Decisions
 
-1. **No Caching**: Simplified loading by reading tokens fresh from disk each time
-   - Trade-off: Slightly slower performance for maintainability
-   - File I/O is fast enough for ~400 tokens
+1. **No Caching**: Reads `tokens.json` fresh from disk on every search
+   - Trade-off: Prioritizes simplicity over performance
+   - File I/O is fast enough (<100ms for 403 tokens)
+   - Eliminates cache invalidation complexity
 
-2. **No Auto-Updates**: Removed GitHub API integration
-   - Users manually update by downloading new releases
+2. **No Auto-Updates**: Removed GitHub API integration (v2.0)
+   - Users manually download new releases from GitHub
    - Eliminates network dependencies and potential failures
+   - Reduces code complexity (removed `urllib`, `time` modules)
 
-3. **Local-Only**: All functionality works offline
-   - No external API calls during normal operation
+3. **Local-Only**: Zero network calls during normal operation
+   - All data and icons bundled in workflow package
+   - Works completely offline
+
+4. **Three-Tier Fuzzy Matching**: Balances accuracy and flexibility
+   - Exact matches ranked highest (by position)
+   - Sequence matching catches partial/misspelled queries
+   - Low similarity threshold (0.2) for very fuzzy queries
+
+5. **Icon Generation**: Pre-generated PNGs instead of dynamic rendering
+   - All 352 color icons generated once via `generate_icon_script.py`
+   - Faster Alfred display (no runtime rendering)
+   - Trade-off: Manual regeneration needed when tokens change
 
 ## Development Workflow
 
@@ -95,42 +149,67 @@ This Alfred workflow was developed using [Claude Code](https://docs.anthropic.co
 
 ### Modifying Search Logic
 
-The fuzzy matching in `search_tokens.py` uses:
-- Exact substring matching (highest priority)
-- Character sequence matching (flexible)
-- Similarity ratio matching (threshold: 0.2)
+The fuzzy matching in [search_tokens.py](search_tokens.py) uses a three-tier approach:
 
-Results are limited to top 20 matches, sorted by relevance.
+1. **Exact substring matching** (lines 19-21, 72-74)
+   - Highest priority: `if query_lower in name_lower`
+   - Scored by position: `score = (0, name_lower.index(query_lower))`
+
+2. **Character sequence matching** (lines 23-30)
+   - Checks if all query chars appear in order in token name
+   - More flexible than substring (allows gaps)
+
+3. **Similarity ratio** (lines 33-34, 76-78)
+   - Uses `difflib.SequenceMatcher` with threshold: 0.2
+   - Very lenient for fuzzy/misspelled queries
+
+Results are limited to top 20 matches, sorted by score tuple (category, detail).
 
 ## Files Overview
 
 ```
 .
-├── search_tokens.py          # Main Python search script
-├── tokens.json               # Tapestry design token data (464 tokens)
-├── generate_icon_script.py  # Icon generation script (Pillow/PIL)
-├── info.plist                # Alfred workflow configuration
-├── build.sh                  # Build and versioning script
-├── icon.png                  # Workflow icon
-├── images/                   # Generated token icons (352 PNGs)
-│   ├── tapestry-icon-*.png   # Mono/color Tapestry logos
-│   └── --t-*.png             # Individual color token icons (64x64)
+├── search_tokens.py          # Main Python search script (115 lines)
+├── tokens.json               # Tapestry token data: 403 tokens (~25KB)
+├── generate_icon_script.py  # Icon generation script (120 lines, Pillow/PIL)
+├── info.plist                # Alfred workflow config (XML plist, version 2.1.0)
+├── build.sh                  # Build & versioning script (89 lines)
+├── icon.png                  # Workflow icon (24KB)
+├── images/                   # Generated token icons (423 files total)
+│   ├── tapestry-icon-*.png   # Mono/color Tapestry logos (2 files)
+│   └── --t-*.png             # Color token icons (352 PNGs, 64x64 each)
 ├── README.md                 # User documentation
-└── CLAUDE.md                 # This file
+├── CLAUDE.md                 # This file (development notes)
+├── CLAUDE.local.md           # Personal/local settings (gitignored)
+└── .claude/                  # Claude Code settings (gitignored)
+    └── settings.local.json   # Local permissions config
 ```
+
+### Packaged in Workflow
+The `.alfredworkflow` file excludes:
+- `.git/`, `.claude/` directories
+- `build.sh` build script
+- `.gitignore`, `.DS_Store`
+- Python cache files (`__pycache__/`, `*.pyc`)
+- Previous `.alfredworkflow` files
 
 ## Performance Characteristics
 
-- **Token count**: 464 total (352 colors, 112 non-colors)
-- **Load time**: <100ms for 464 tokens
-- **Search time**: <50ms for typical queries
-- **Memory**: Minimal (no caching)
-- **Disk I/O**: ~1 file read per search
-- **Icon generation**: ~5-10 seconds for all 352 color icons
+- **Token count**: 403 total (352 colors, 51 non-colors)
+- **Data size**: ~25KB `tokens.json` file
+- **Load time**: <100ms (reads and parses JSON on every search)
+- **Search time**: <50ms for typical queries (single-pass filtering + sorting)
+- **Memory**: Minimal (~1-2MB, no caching between searches)
+- **Disk I/O**: 1 file read per search (`tokens.json`)
+- **Icon generation**: ~5-10 seconds total for all 352 color icons (one-time via script)
+- **Package size**: ~460KB `.alfredworkflow` file (includes all 423 icon PNGs)
 
 ## Future Considerations
 
-If the workflow needs to be extended:
-- Consider adding caching back if token count grows significantly (>1000)
-- Could implement update checking if auto-updates become valuable
-- Potential for filtering by token type (colors, spacing, etc.)
+Potential enhancements if needed:
+- **Caching**: Re-add in-memory cache if token count exceeds ~1000 (currently 403)
+- **Type filtering**: Add modifiers to filter by token type (colors only, spacing only, etc.)
+- **Auto-updates**: Restore GitHub API integration for automatic token updates
+- **Token details**: Show computed values, contrast ratios, or usage examples
+- **Copy variations**: Modifiers to copy value instead of name (e.g., `hsl(0, 0%, 88%)`)
+- **Icon improvements**: Support RGB/hex colors, radial gradients, or larger icon sizes
